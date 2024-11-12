@@ -75,7 +75,7 @@ public class HobbitDPVisualizer extends Application {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 Label cell = new Label(String.valueOf(gems[i][j]));
-                cell.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+                cell.setFont(Font.font("Times New Roman", FontWeight.BOLD, 20));
                 cell.setMinSize(50, 50);
                 cell.setStyle("-fx-border-color: black; -fx-alignment: center;");
                 if (j == pathCols[i]) {

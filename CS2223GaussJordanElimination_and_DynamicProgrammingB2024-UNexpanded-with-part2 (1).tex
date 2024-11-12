@@ -1,0 +1,221 @@
+
+\documentclass[12pt]{amsart}
+\usepackage{geometry} % see geometry.pdf on how to lay out the page. There's lots.
+\geometry{a4paper} % or letter or a5paper or ... etc
+% \geometry{landscape} % rotated page geometry
+
+% See the ``Article customise'' template for come common customisations
+
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\pagestyle{empty}
+
+\pagenumbering{gobble}
+
+\title{Programming Assignment \#4\\CS 2223 B-Term 2024\\Gauss-Jordan Elimination\\ \& \\ Dynamic Programming}
+\author{Artem Frenk}
+
+\date{} % delete this line to display the current date
+
+%%% BEGIN DOCUMENT
+\pagestyle{empty}
+\begin{document}
+\pagestyle{empty}
+\maketitle
+%\vspace{-0.15 in}
+
+\begin{enumerate}[1.]
+
+\item (5 Points) Explain why the (repaired\footnote{The algorithm as printed has a serious bug.  We'll remedy this in class and in a separate video.  The corrected algorithm still has a significant shortcoming.}) \textit{ForwardElimination} algorithm on page 210 of Levitin fails to provide a solution for:\\
+
+\begin{center}
+
+\begin{tabular}{r c r c r c l}
+
+$x_1$&$+$&$x_2$&$+$&$x_3$&$=$&$6$\\
+
+$x_1$&$+$&$x_2$&$+$&$2x_3$&$=$&$9$\\
+
+$x_1$&$+$&$2x_2$&$+$&$3x_3$&$=$&$14$\\
+
+
+\end{tabular}
+
+\end{center}
+
+\vspace{.2 in}
+
+\noindent despite the fact that $x=(1,2,3)$ or $x_1=1$, $x_2=2$, $x_3=3$ can be easily verified as a solution to the system.\\  
+\\
+Answer: 
+The \textit{ForwardElimination} algorithm aims to convert the matrix into Upper Triangular Form by removing variables from each equation. However, this algorightm fails to take into account the case where the pivot is close to or exactly is zero; or the case where rows are linearly dependent. Turning the above example into an augumented matrix, we get: 
+\begin{bmatrix}
+1 & 1 & 1 &| &6 \\
+1 & 1 & 2 &| &9 \\
+1 & 2 & 3 &| & 14
+\end{bmatrix} \\
+The goal is to zero out [1,0] , then [2,0]. We zero out [1,0] by subtracting \\
+\begin{bmatrix}
+1 & 1 & 2 &| &9
+\end{bmatrix} - 
+\begin{bmatrix}
+1 & 1 & 1 &| &6
+\end{bmatrix}  =
+\begin{bmatrix}
+0 & 0 & 1 &| &3
+\end{bmatrix}. \\
+We then zero out row 3 by subtracting \\
+\begin{bmatrix}
+    1 & 2 & 3 &| & 14
+\end{bmatrix}
+- 
+\begin{bmatrix}
+    1 & 1 & 1 &| &6
+\end{bmatrix} = 
+\begin{bmatrix}
+    0 & 1 & 2 &| & 8
+\end{bmatrix}
+\\
+This results in the augumented matrix 
+\begin{bmatrix}
+1 & 1 & 1 &| &6 \\
+0 & 0 & 1 &| &3 \\
+0 & 1 & 2 &| & 8
+\end{bmatrix} \\
+The next step is to treat [1,1] as the next pivot. However, 1,1 is 0, which means that we cannot use normal forward elimination to continue. This is because division by zero could occur when trying to normalize the row. 
+
+\noindent How does the \textit{BetterForwardElimination} algorithm on page 211 of Levitin remedy this?\\
+
+Answer: To handle this situation, the \textit{BetterForwardElimination} algorithm uses partial pivoting. This process involves looking at the remaining elements in the column and swapping rows to bring the largest absolute value to the pivot position, reducing the risk of division by zero or instability due to very small numbers.
+
+In our case, the algorithm would identify that the element in the third row, second column (which is 1), should be the pivot instead of the zero in the second row. So, we swap rows 2 and 3:
+\begin{bmatrix}
+    0 & 1 & 1 &| & 6 \\
+    0 & 1 & 2 & | &8 \\
+    0 & 0 & 1 & | & 1
+\end{bmatrix} \\
+This means that we can now perform Forward Elimination without encountering a zero pivot.
+
+%temp fix
+
+\vspace{.4 in}
+
+\item (10 Points) Explain in some detail why the \textit{BetterForwardElimination} algorithm on page 211 of Levitin fails to provide a solution for:\\
+
+\begin{center}
+
+\begin{tabular}{r c r c r c l}
+
+$x_1$&$+$&$x_2$&$+$&$x_3$&$=$&$6$\\
+
+$x_1$&$+$&$x_2$&$+$&$2x_3$&$=$&$9$\\
+
+$2x_1$&$+$&$2x_2$&$+$&$3x_3$&$=$&$15$\\
+
+
+\end{tabular}
+
+\end{center}
+
+\vspace{.2 in}
+
+\noindent despite the fact that $x=(1,2,3)$ or $x_1=1$, $x_2=2$, $x_3=3$ can be easily verified as a solution to the system.  \\
+Answer: 
+The \textit{BetterForwardElimination} algorithm fails due to linearly dependent rows.  
+
+This system can be represented as an augmented matrix:
+\begin{equation*}
+\begin{bmatrix}
+1 & 1 & 1 & | & 6 \\
+1 & 1 & 2 & | & 9 \\
+2 & 2 & 3 & | & 15 \\
+\end{bmatrix}
+\end{equation*}
+
+We can verify that the solution \( x = (1, 2, 3) \) satisfies all equations, but due to the structure of the matrix, the \textit{BetterForwardElimination} algorithm will fail in its current form.
+
+The matrix begins as:
+\begin{equation*}
+\begin{bmatrix}
+1 & 1 & 1 & | & 6 \\
+1 & 1 & 2 & | & 9 \\
+2 & 2 & 3 & | & 15 \\
+\end{bmatrix}
+\end{equation*}
+
+In the first column, the entry with the largest absolute value is in the third row (value 2), so \textit{BetterForwardElimination} performs a row swap, moving the third row to the top:
+\begin{equation*}
+\begin{bmatrix}
+2 & 2 & 3 & | & 15 \\
+1 & 1 & 1 & | & 6 \\
+1 & 1 & 2 & | & 9 \\
+\end{bmatrix}
+\end{equation*}
+
+The goal is to make the entries below the pivot (2 in the first row) zero in the first column. We perform the following row operations:
+
+\begin{itemize}
+    \item \textbf{Row 2} - \( \frac{1}{2} \times \text{Row 1} \):
+    \begin{equation*}
+    (1, 1, 1 | 6) - \frac{1}{2} (2, 2, 3 | 15) = (0, 0, -0.5 | -1.5)
+    \end{equation*}
+    \item \textbf{Row 3} - \( \frac{1}{2} \times \text{Row 1} \):
+    \begin{equation*}
+    (1, 1, 2 | 9) - \frac{1}{2} (2, 2, 3 | 15) = (0, 0, 0.5 | 1.5)
+    \end{equation*}
+\end{itemize}
+
+After these operations, the matrix becomes:
+\begin{equation*}
+\begin{bmatrix}
+2 & 2 & 3 & | & 15 \\
+0 & 0 & -0.5 & | & -1.5 \\
+0 & 0 & 0.5 & | & 1.5 \\
+\end{bmatrix}
+\end{equation*}
+
+Normally, we would proceed to make the second element in the second row a pivot. However, in this case, the entire second column for rows 2 and 3 has zero entries, meaning the algorithm encounters a zero pivot problem, which signals a linear dependency between rows.
+
+This situation indicates that the matrix is singular (i.e., it does not have full rank), and there is an underlying linear dependency between the rows. Specifically, the third row is a linear combination of the first two rows:
+\begin{equation*}
+\text{Row 3} = 2 \times \text{Row 1} - \text{Row 2}
+\end{equation*}
+When a matrix is singular, as in this case, the elimination process encounters zero pivots, preventing the algorithm from completing the solution. In such cases, the system may have infinitely many solutions or, if inconsistent, no solution at all. Here, the system is consistent with infinitely many solutions.
+
+\\
+
+\noindent \textbf{What can be done to remedy this shortcoming in the algorithm?}
+
+To handle cases with linear dependencies, the algorithm can be improved by checking for linear dependency by checking the rank of the matrix. If the rank of the coefficient matrix is less than the number of vaiables, that heavily implies a singular matrix and lets the algorithm know that the system does not have a unique solution. In the case of a singular matrix, the algorithm can use Row Reduces Eschelon Form (RREF)  which identifies free variables, or those without pivots and allows the solution to be represented in terms of parameters. 
+Once in RREF, the algorithm can express solutions parametrically. For instance, if one variable is free, the solution could be given in terms of that free variable, representing an entire family of solutions rather than a single solution.
+reducing to RREF, if a row with all zeros in the coefficient positions has a non-zero entry in the augmented part (e.g., \([0, 0, 0 | b]\) with \( b \neq 0 \)), the system is inconsistent and has no solutions. In our case, the system is consistent, so this step is not a concern here.
+\end{enumerate}
+Using RREF, the matrix:
+\begin{equation*}
+\begin{bmatrix}
+2 & 2 & 3 & | & 15 \\
+0 & 0 & -0.5 & | & -1.5 \\
+0 & 0 & 0.5 & | & 1.5
+\end{bmatrix}
+\end{equation*}
+can be simplified to:
+\begin{equation*}
+\begin{bmatrix}
+1 & 1 & 1 & | & 6 \\
+0 & 0 & 1 & | & 3 \\
+0 & 0 & 0 & | & 0 \\
+\end{bmatrix}
+\end{equation*}
+
+This form shows that \( x_3 = 3 \) and \( x_1 + x_2 + x_3 = 6 \), allowing us to assign \( x_2 \) as a free variable:
+\begin{align*}
+x_3 &= 3 \\
+x_1 + x_2 &= 3 \Rightarrow x_1 = 3 - x_2
+\end{align*}
+Thus, the solution can be expressed as:
+\begin{equation*}
+(x_1, x_2, x_3) = (3 - t, t, 3)
+\end{equation*}
+where \( t \) is a parameter representing the free variable \( x_2 \).
+\end{document}
